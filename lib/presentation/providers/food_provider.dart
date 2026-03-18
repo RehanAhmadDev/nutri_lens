@@ -2,81 +2,110 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/gemini_service.dart';
 import '../../domain/food_model.dart';
 
-// 1. State Class: Yeh batayegi ke screen par loading ghumani hai, error dikhana hai, ya data.
+// State Class: To manage the UI state (Loading, Error, Data, Image)
 class FoodState {
-  final bool isLoading;
-  final FoodModel? foodModel;
   final File? selectedImage;
+  final bool isLoading;
   final String errorMessage;
+  final FoodModel? foodModel;
 
   FoodState({
-    this.isLoading = false,
-    this.foodModel,
     this.selectedImage,
+    this.isLoading = false,
     this.errorMessage = '',
+    this.foodModel,
   });
 
   FoodState copyWith({
-    bool? isLoading,
-    FoodModel? foodModel,
     File? selectedImage,
+    bool? isLoading,
     String? errorMessage,
+    FoodModel? foodModel,
   }) {
     return FoodState(
-      isLoading: isLoading ?? this.isLoading,
-      foodModel: foodModel ?? this.foodModel,
       selectedImage: selectedImage ?? this.selectedImage,
+      isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage ?? this.errorMessage,
+      foodModel: foodModel ?? this.foodModel,
     );
   }
 }
 
-// 2. Notifier Class: Asli logic yahan chalega
-class FoodNotifier extends StateNotifier<FoodState> {
-  FoodNotifier() : super(FoodState());
-
-  final GeminiService _geminiService = GeminiService();
-  final ImagePicker _picker = ImagePicker();
-
-  // 📸 Tasveer lene aur AI ko bhejne ka function
-  Future<void> pickImageAndAnalyze(ImageSource source) async {
-    try {
-      // Pehle tasveer select karwai
-      final XFile? pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile == null) return; // Agar user ne cancel kar diya
-
-      final File imageFile = File(pickedFile.path);
-
-      // UI ko bataya ke Loading shuru kar do aur purana data clear kar do
-      state = state.copyWith(isLoading: true, selectedImage: imageFile, errorMessage: '', foodModel: null);
-
-      // AI ko tasveer bheji
-      final String aiResponse = await _geminiService.analyzeFoodImage(imageFile);
-
-      // 🧹 Gemini aksar jawab ke shuru mein ```json aur aakhir mein ``` laga deta hai.
-      // Isay saaf karna zaroori hai taake app crash na ho.
-      String cleanedJson = aiResponse.replaceAll('```json', '').replaceAll('```', '').trim();
-
-      // JSON text ko Dart ke Map mein badla
-      final Map<String, dynamic> jsonData = jsonDecode(cleanedJson);
-
-      // Map ko apne FoodModel mein badla
-      final FoodModel food = FoodModel.fromJson(jsonData);
-
-      // UI ko bataya ke Loading khatam aur naya data aa gaya hai
-      state = state.copyWith(isLoading: false, foodModel: food);
-
-    } catch (e) {
-      // Agar koi error aaya toh UI ko error message bhej diya
-      state = state.copyWith(isLoading: false, errorMessage: e.toString().replaceAll("Exception: ", ""));
-    }
-  }
-}
-
-// 3. Provider: Jise hum apni UI screens mein use karenge
+// Provider initialization
 final foodProvider = StateNotifierProvider<FoodNotifier, FoodState>((ref) {
   return FoodNotifier();
 });
+
+// Notifier Class: Contains the core logic
+class FoodNotifier extends StateNotifier<FoodState> {
+  FoodNotifier() : super(FoodState());
+
+  final _picker = ImagePicker();
+  final _geminiService = GeminiService();
+
+  // Initialize Supabase Client
+  final _supabase = Supabase.instance.client;
+
+  Future<void> pickImageAndAnalyze(ImageSource source) async {
+    try {
+      // 1. Pick Image from Camera or Gallery
+      final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
+      if (pickedFile == null) return;
+
+      final imageFile = File(pickedFile.path);
+
+      // 2. Set UI to Loading State
+      state = state.copyWith(
+        selectedImage: imageFile,
+        isLoading: true,
+        errorMessage: '',
+        foodModel: null, // Clear previous results
+      );
+
+      // 3. Send image to Gemini API
+      final jsonResponse = await _geminiService.analyzeFoodImage(imageFile);
+
+      // 4. Clean the JSON string (in case Gemini adds markdown like ```json ... ```)
+      String cleanedJson = jsonResponse.replaceAll('```json', '').replaceAll('```', '').trim();
+
+      // 5. Parse JSON into FoodModel
+      final Map<String, dynamic> data = jsonDecode(cleanedJson);
+      final foodData = FoodModel(
+        foodName: data['food_name'].toString(),
+        calories: int.parse(data['calories'].toString()),
+        protein: int.parse(data['protein'].toString()),
+        carbs: int.parse(data['carbs'].toString()),
+        fats: int.parse(data['fats'].toString()),
+      );
+
+      // 6. 🚀 SAVE TO SUPABASE DATABASE 🚀
+      await _supabase.from('food_scans').insert({
+        'food_name': foodData.foodName,
+        'calories': foodData.calories,
+        'protein': foodData.protein,
+        'carbs': foodData.carbs,
+        'fats': foodData.fats,
+      });
+
+      print("✅ SUCCESS: Data saved to Supabase securely!");
+
+      // 7. Update UI with the final result
+      state = state.copyWith(
+        isLoading: false,
+        foodModel: foodData,
+      );
+
+    } catch (e) {
+      // Handle any errors gracefully
+      print("❌ ERROR: ${e.toString()}");
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: "Something went wrong. Please try again with a clear picture.",
+      );
+    }
+  }
+}

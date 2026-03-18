@@ -17,7 +17,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
 
   # 🗄️ Backend & Cloud Database
-  supabase_flutter: ^2.4.0
+  supabase_flutter: ^2.12.0
 
   # 🧠 Google Gemini AI (Image Processing)
   google_generative_ai: ^0.2.2
