@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/food_provider.dart';
 import '../../domain/food_model.dart';
+import 'history_screen.dart'; // 🚀 NAYA: History Screen ko import kiya hai
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -29,6 +30,19 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
+        // 🚀 NAYA: AppBar mein History ka button add kiya hai
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded, color: Color(0xFF4F46E5), size: 28),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HistoryScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 8), // Thori si spacing ke liye
+        ],
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
