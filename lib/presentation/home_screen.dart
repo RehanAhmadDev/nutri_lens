@@ -3,26 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 NAYA: Supabase import for logout
 import 'providers/food_provider.dart';
 import '../../domain/food_model.dart';
-import 'history_screen.dart'; // 🚀 NAYA: History Screen ko import kiya hai
+import 'history_screen.dart';
+import 'auth_screen.dart'; // 🚀 NAYA: AuthScreen import for navigation after logout
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the provider to rebuild UI on state changes
     final foodState = ref.watch(foodProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Clean, modern light background
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         title: Text(
           'NutriLens',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E1E2C), // Dark, premium text color
+            color: const Color(0xFF1E1E2C),
             letterSpacing: 1.2,
           ),
         ),
@@ -30,8 +31,8 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
-        // 🚀 NAYA: AppBar mein History ka button add kiya hai
         actions: [
+          // 📜 History Button
           IconButton(
             icon: const Icon(Icons.history_rounded, color: Color(0xFF4F46E5), size: 28),
             onPressed: () {
@@ -41,7 +42,28 @@ class HomeScreen extends ConsumerWidget {
               );
             },
           ),
-          const SizedBox(width: 8), // Thori si spacing ke liye
+
+          // 🚪 🚀 Sign Out Button
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 26),
+            onPressed: () async {
+              // 🚀 JADOO: Logout hone par Riverpod ki memory (Home screen ka data) clear kar do
+              ref.invalidate(foodProvider);
+
+              // 1. Supabase se user ko sign out karein
+              await Supabase.instance.client.auth.signOut();
+
+              // 2. Wapis Auth Screen par bhejein aur purani sari screens khatam kar dein
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AuthScreen()),
+                      (route) => false, // Yeh pichli history clear kar dega taake user back daba kar wapis na aa sake
+                );
+              }
+            },
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -51,12 +73,9 @@ class HomeScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Image Preview Section
               _buildImagePreview(foodState.selectedImage),
-
               const SizedBox(height: 32),
 
-              // Dynamic State Management (Loading, Error, or Result)
               if (foodState.isLoading)
                 _buildLoadingState()
               else if (foodState.errorMessage.isNotEmpty)
@@ -64,19 +83,18 @@ class HomeScreen extends ConsumerWidget {
               else if (foodState.foodModel != null)
                   _buildPremiumResultCard(foodState.foodModel!),
 
-              const SizedBox(height: 120), // Extra spacing for the floating dock
+              const SizedBox(height: 120),
             ],
           ),
         ),
       ),
-
-      // Modern Floating Action Dock for Camera and Gallery
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _buildModernActionDock(ref),
     );
   }
 
-  // Image Preview Box
+  // --- Niche ka sara code waisa hi hai jaisa pehle tha ---
+
   Widget _buildImagePreview(File? image) {
     return Container(
       height: 300,
@@ -101,8 +119,8 @@ class HomeScreen extends ConsumerWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0F4FF),
+              decoration: const BoxDecoration(
+                color: Color(0xFFF0F4FF),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.image_search_rounded, size: 50, color: Color(0xFF6B7280)),
@@ -118,12 +136,11 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Loading Animation
   Widget _buildLoadingState() {
     return Column(
       children: [
         const SizedBox(height: 30),
-        const CircularProgressIndicator(color: Color(0xFF4F46E5)), // Indigo color
+        const CircularProgressIndicator(color: Color(0xFF4F46E5)),
         const SizedBox(height: 20),
         Text(
           "Analyzing nutritional values...",
@@ -133,7 +150,6 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Error Box
   Widget _buildErrorState(String error) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -157,12 +173,10 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Premium Result Card (The Main UI)
   Widget _buildPremiumResultCard(FoodModel food) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Title
         Text(
           food.foodName.toUpperCase(),
           textAlign: TextAlign.center,
@@ -174,13 +188,11 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 24),
-
-        // Main Calories Card (Modern Gradient)
         Container(
           padding: const EdgeInsets.symmetric(vertical: 30),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)], // Indigo to Purple Gradient
+              colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -217,10 +229,7 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
         ),
-
         const SizedBox(height: 24),
-
-        // Macros Row (Protein, Carbs, Fats)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -233,7 +242,6 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Small Macro Info Cards
   Widget _buildMacroCard(String title, String value, Color color, IconData icon) {
     return Expanded(
       child: Container(
@@ -277,13 +285,12 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Modern Unified Action Dock for Buttons
   Widget _buildModernActionDock(WidgetRef ref) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 40),
       height: 70,
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2C), // Very dark premium blue/grey
+        color: const Color(0xFF1E1E2C),
         borderRadius: BorderRadius.circular(35),
         boxShadow: [
           BoxShadow(
@@ -296,7 +303,6 @@ class HomeScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Gallery Button
           Expanded(
             child: InkWell(
               onTap: () => ref.read(foodProvider.notifier).pickImageAndAnalyze(ImageSource.gallery),
@@ -311,11 +317,7 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
           ),
-
-          // Divider
           Container(width: 1, height: 40, color: Colors.white.withOpacity(0.2)),
-
-          // Camera Button
           Expanded(
             child: InkWell(
               onTap: () => ref.read(foodProvider.notifier).pickImageAndAnalyze(ImageSource.camera),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 Supabase Import
 import 'presentation/home_screen.dart';
+import 'presentation/auth_screen.dart'; // 🚀 NAYA: Auth Screen Import
 import 'utils/api_constants.dart'; // 🚀 Keys Import
 
 void main() async {
@@ -27,6 +28,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 🚀 Check karein ke user ka pehle se koi active session (login) hai ya nahi
+    final supabase = Supabase.instance.client;
+    final session = supabase.auth.currentSession;
+
     return MaterialApp(
       title: 'NutriLens',
       debugShowCheckedModeBanner: false,
@@ -34,7 +39,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple), // Aap ka selected theme
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      // 🚀 NAYA LOGIC: Agar session mojood hai toh Home par, warna Auth (Login) par
+      home: session != null ? const HomeScreen() : const AuthScreen(),
     );
   }
 }

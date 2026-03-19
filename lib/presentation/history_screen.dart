@@ -3,13 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// 🚀 1. Riverpod Provider: Supabase se data mangwane ke liye
-final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+// 🚀 1. UPDATE: yahan '.autoDispose' lagaya hai taake pichle user ka data memory se delete ho jaye
+final historyProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final supabase = Supabase.instance.client;
-  // Database se data fetch karein aur naya data sab se upar dikhayein (ascending: false)
+
+  // Current user ki ID nikalein
+  final userId = supabase.auth.currentUser?.id;
+
+  // Agar user ghalti se bina login kiye yahan aa gaya hai, toh khali list bhej dein
+  if (userId == null) return [];
+
+  // Database se sirf current user ka data fetch karein aur naya data sab se upar dikhayein
   final response = await supabase
       .from('food_scans')
       .select()
+      .eq('user_id', userId) // Sirf is user ka data filter hoga
       .order('created_at', ascending: false);
 
   return List<Map<String, dynamic>>.from(response);
