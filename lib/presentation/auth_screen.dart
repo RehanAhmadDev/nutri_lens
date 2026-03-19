@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/app_colors.dart'; // 🎨 NAYA: AppColors import kiya hai
 import 'home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _nameController = TextEditingController(); // 🚀 NAYA: Name Field
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -20,13 +21,11 @@ class _AuthScreenState extends State<AuthScreen> {
 
   final _supabase = Supabase.instance.client;
 
-  // 🚀 Core Authentication Function
   Future<void> _authenticate() async {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // Validations
     if (email.isEmpty || password.isEmpty || (!_isLogin && name.isEmpty)) {
       _showError("Please fill all the required fields!");
       return;
@@ -36,18 +35,15 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isLogin) {
-        // Log In
         await _supabase.auth.signInWithPassword(email: email, password: password);
       } else {
-        // Sign Up (Name bhi database mein save ho jayega)
         await _supabase.auth.signUp(
           email: email,
           password: password,
-          data: {'full_name': name}, // 🚀 Metadata mein naam save karein
+          data: {'full_name': name},
         );
       }
 
-      // Successful hone par Home Screen par le jayen
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -65,14 +61,18 @@ class _AuthScreenState extends State<AuthScreen> {
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating),
+      SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.error, // 🎨 Updated
+          behavior: SnackBarBehavior.floating
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.background, // 🎨 Updated
       body: Center(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -87,12 +87,12 @@ class _AuthScreenState extends State<AuthScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                    colors: [AppColors.primary, AppColors.secondary], // 🎨 Updated
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)),
+                    BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)), // 🎨 Updated
                   ],
                 ),
                 child: const Icon(Icons.center_focus_strong_rounded, size: 60, color: Colors.white),
@@ -103,12 +103,12 @@ class _AuthScreenState extends State<AuthScreen> {
               Text(
                 _isLogin ? 'Welcome Back!' : 'Join NutriLens',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: const Color(0xFF1E1E2C)),
+                style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textDark), // 🎨 Updated
               ),
               Text(
                 _isLogin ? 'Log in to track your daily nutrition.' : 'Create an account to start your fitness journey.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
+                style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight), // 🎨 Updated
               ),
               const SizedBox(height: 40),
 
@@ -116,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.cardColor, // 🎨 Updated
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10)),
@@ -124,10 +124,10 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 child: Column(
                   children: [
-                    // 👤 Name Field (Sirf Signup mein dikhega)
+                    // 👤 Name Field
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
-                      height: _isLogin ? 0 : 70, // Smooth transition
+                      height: _isLogin ? 0 : 70,
                       child: SingleChildScrollView(
                         child: _isLogin ? const SizedBox.shrink() : Padding(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -167,12 +167,12 @@ class _AuthScreenState extends State<AuthScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
+                    colors: [AppColors.primary, AppColors.secondary], // 🎨 Updated
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   boxShadow: [
-                    BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)),
+                    BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)), // 🎨 Updated
                   ],
                 ),
                 child: ElevatedButton(
@@ -198,18 +198,17 @@ class _AuthScreenState extends State<AuthScreen> {
                 children: [
                   Text(
                     _isLogin ? "Don't have an account? " : "Already have an account? ",
-                    style: GoogleFonts.poppins(color: Colors.grey.shade600),
+                    style: GoogleFonts.poppins(color: AppColors.textLight), // 🎨 Updated
                   ),
                   GestureDetector(
                     onTap: () => setState(() {
                       _isLogin = !_isLogin;
-                      // Clear fields when switching
                       _nameController.clear();
                       _passwordController.clear();
                     }),
                     child: Text(
                       _isLogin ? "Sign Up" : "Log In",
-                      style: GoogleFonts.poppins(color: const Color(0xFF4F46E5), fontWeight: FontWeight.bold),
+                      style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.bold), // 🎨 Updated
                     ),
                   ),
                 ],
@@ -221,7 +220,7 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 
-  // 📝 Custom Text Field Builder (Light grey background, sleek design)
+  // 📝 Custom Text Field Builder
   Widget _buildTextField({required TextEditingController controller, required String hint, required IconData icon, bool isPassword = false, bool isEmail = false}) {
     return TextField(
       controller: controller,
@@ -229,10 +228,10 @@ class _AuthScreenState extends State<AuthScreen> {
       keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: Colors.grey.shade400, fontSize: 14),
-        prefixIcon: Icon(icon, color: const Color(0xFF4F46E5), size: 22),
+        hintStyle: GoogleFonts.poppins(color: AppColors.textLight.withOpacity(0.6), fontSize: 14), // 🎨 Updated
+        prefixIcon: Icon(icon, color: AppColors.primary, size: 22), // 🎨 Updated
         filled: true,
-        fillColor: const Color(0xFFF4F6F9), // Light grayish-blue for input background
+        fillColor: const Color(0xFFF4F6F9),
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -240,7 +239,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF4F46E5), width: 1.5),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5), // 🎨 Updated
         ),
       ),
     );

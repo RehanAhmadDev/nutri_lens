@@ -1,22 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 Supabase Import
-import 'presentation/home_screen.dart';
-import 'presentation/auth_screen.dart'; // 🚀 NAYA: Auth Screen Import
-import 'utils/api_constants.dart'; // 🚀 Keys Import
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'presentation/splash_screen.dart'; // 🚀 NAYA IMPORT
+import 'utils/api_constants.dart';
+import 'utils/app_colors.dart'; // 🎨 Color File
 
 void main() async {
-  // 1. Flutter engine ko ready karna zaroori hai async setup ke liye
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. 🚀 App start hone se pehle Supabase ko connect karna
   await Supabase.initialize(
     url: ApiConstants.supabaseUrl,
     anonKey: ApiConstants.supabaseAnonKey,
   );
 
   runApp(
-    // ProviderScope ke baghair Riverpod nahi chalta
     const ProviderScope(
       child: MyApp(),
     ),
@@ -28,19 +25,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🚀 Check karein ke user ka pehle se koi active session (login) hai ya nahi
-    final supabase = Supabase.instance.client;
-    final session = supabase.auth.currentSession;
-
     return MaterialApp(
       title: 'NutriLens',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple), // Aap ka selected theme
+        // 🎨 Poori app ka default color humari primary color se set ho raha hai
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
       ),
-      // 🚀 NAYA LOGIC: Agar session mojood hai toh Home par, warna Auth (Login) par
-      home: session != null ? const HomeScreen() : const AuthScreen(),
+      // 🚀 App khulte hi ab sab se pehle SplashScreen aayegi
+      home: const SplashScreen(),
     );
   }
 }

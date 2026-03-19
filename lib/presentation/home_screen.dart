@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:supabase_flutter/supabase_flutter.dart'; // 🚀 NAYA: Supabase import for logout
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/food_provider.dart';
+import 'providers/daily_goal_provider.dart'; // 🚀 NAYA IMPORT
 import '../../domain/food_model.dart';
 import 'history_screen.dart';
-import 'auth_screen.dart'; // 🚀 NAYA: AuthScreen import for navigation after logout
+import 'auth_screen.dart';
+import '../utils/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -15,15 +17,16 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foodState = ref.watch(foodProvider);
+    final dailyCaloriesState = ref.watch(dailyGoalProvider); // 🚀 NAYA: Aaj ki calories
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           'NutriLens',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E1E2C),
+            color: AppColors.textDark,
             letterSpacing: 1.2,
           ),
         ),
@@ -32,9 +35,8 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
-          // 📜 History Button
           IconButton(
-            icon: const Icon(Icons.history_rounded, color: Color(0xFF4F46E5), size: 28),
+            icon: const Icon(Icons.history_rounded, color: AppColors.primary, size: 28),
             onPressed: () {
               Navigator.push(
                 context,
@@ -42,23 +44,19 @@ class HomeScreen extends ConsumerWidget {
               );
             },
           ),
-
-          // 🚪 🚀 Sign Out Button
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 26),
             onPressed: () async {
-              // 🚀 JADOO: Logout hone par Riverpod ki memory (Home screen ka data) clear kar do
               ref.invalidate(foodProvider);
+              ref.invalidate(dailyGoalProvider); // 🚀 Logout par isay bhi clear karein
 
-              // 1. Supabase se user ko sign out karein
               await Supabase.instance.client.auth.signOut();
 
-              // 2. Wapis Auth Screen par bhejein aur purani sari screens khatam kar dein
               if (context.mounted) {
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const AuthScreen()),
-                      (route) => false, // Yeh pichli history clear kar dega taake user back daba kar wapis na aa sake
+                      (route) => false,
                 );
               }
             },
@@ -66,25 +64,35 @@ class HomeScreen extends ConsumerWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildImagePreview(foodState.selectedImage),
-              const SizedBox(height: 32),
+      body: RefreshIndicator(
+        // 🔄 NAYA: Swipe down to refresh total calories
+        onRefresh: () async {
+          ref.invalidate(dailyGoalProvider);
+        },
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 📊 🚀 NAYA FEATURE: Daily Goal Tracker Widget
+                _buildGoalTracker(dailyCaloriesState),
+                const SizedBox(height: 32),
 
-              if (foodState.isLoading)
-                _buildLoadingState()
-              else if (foodState.errorMessage.isNotEmpty)
-                _buildErrorState(foodState.errorMessage)
-              else if (foodState.foodModel != null)
-                  _buildPremiumResultCard(foodState.foodModel!),
+                _buildImagePreview(foodState.selectedImage),
+                const SizedBox(height: 32),
 
-              const SizedBox(height: 120),
-            ],
+                if (foodState.isLoading)
+                  _buildLoadingState()
+                else if (foodState.errorMessage.isNotEmpty)
+                  _buildErrorState(foodState.errorMessage)
+                else if (foodState.foodModel != null)
+                    _buildPremiumResultCard(foodState.foodModel!),
+
+                const SizedBox(height: 120),
+              ],
+            ),
           ),
         ),
       ),
@@ -93,14 +101,107 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // --- Niche ka sara code waisa hi hai jaisa pehle tha ---
+  // 📊 🚀 NAYA FUNCTION: Goal Tracker Widget
+  Widget _buildGoalTracker(AsyncValue<int> dailyCaloriesState) {
+    const int dailyGoal = 2000; // Target Calories
+
+    return dailyCaloriesState.when(
+      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      error: (error, stack) => const SizedBox.shrink(), // Error aane par chup raho
+      data: (consumedCalories) {
+
+        // Progress limit check (1.0 se upar na jaye)
+        double progress = consumedCalories / dailyGoal;
+        if (progress > 1.0) progress = 1.0;
+
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: AppColors.cardColor,
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // ⭕ Circular Progress Indicator
+              SizedBox(
+                height: 80,
+                width: 80,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 8,
+                      backgroundColor: AppColors.textLight.withOpacity(0.1),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      strokeCap: StrokeCap.round,
+                    ),
+                    Center(
+                      child: Icon(
+                        progress >= 1.0 ? Icons.local_fire_department_rounded : Icons.restaurant_rounded,
+                        color: progress >= 1.0 ? Colors.orange : AppColors.primary,
+                        size: 30,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 24),
+
+              // 📝 Text Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Daily Goal",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: AppColors.textLight,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "$consumedCalories / $dailyGoal",
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    Text(
+                      "Kcal consumed today",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.textLight,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // --- Niche ka code waisa hi hai ---
 
   Widget _buildImagePreview(File? image) {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        color: AppColors.cardColor,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -111,7 +212,7 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         child: image != null
             ? Image.file(image, fit: BoxFit.cover, width: double.infinity)
             : Column(
@@ -128,7 +229,7 @@ class HomeScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             Text(
               "Upload a food image to analyze",
-              style: GoogleFonts.poppins(color: const Color(0xFF6B7280), fontSize: 15, fontWeight: FontWeight.w500),
+              style: GoogleFonts.poppins(color: AppColors.textLight, fontSize: 15, fontWeight: FontWeight.w500),
             ),
           ],
         ),
@@ -140,11 +241,11 @@ class HomeScreen extends ConsumerWidget {
     return Column(
       children: [
         const SizedBox(height: 30),
-        const CircularProgressIndicator(color: Color(0xFF4F46E5)),
+        const CircularProgressIndicator(color: AppColors.primary),
         const SizedBox(height: 20),
         Text(
           "Analyzing nutritional values...",
-          style: GoogleFonts.poppins(color: const Color(0xFF4F46E5), fontWeight: FontWeight.w600, fontSize: 16),
+          style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.w600, fontSize: 16),
         ),
       ],
     );
@@ -160,12 +261,12 @@ class HomeScreen extends ConsumerWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Color(0xFFEF4444), size: 32),
+          const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 32),
           const SizedBox(width: 16),
           Expanded(
             child: Text(
               error,
-              style: GoogleFonts.poppins(color: const Color(0xFFB91C1C), fontWeight: FontWeight.w500),
+              style: GoogleFonts.poppins(color: AppColors.error, fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -183,7 +284,7 @@ class HomeScreen extends ConsumerWidget {
           style: GoogleFonts.poppins(
             fontSize: 26,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFF1F2937),
+            color: AppColors.textDark,
             letterSpacing: 1.0,
           ),
         ),
@@ -192,14 +293,12 @@ class HomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 30),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF4F46E5), Color(0xFF7C3AED)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+              colors: [AppColors.primary, AppColors.secondary],
             ),
             borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF4F46E5).withOpacity(0.3),
+                color: AppColors.primary.withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -248,7 +347,7 @@ class HomeScreen extends ConsumerWidget {
         margin: const EdgeInsets.symmetric(horizontal: 6),
         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.cardColor,
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
@@ -267,7 +366,7 @@ class HomeScreen extends ConsumerWidget {
               style: GoogleFonts.poppins(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1F2937),
+                color: AppColors.textDark,
               ),
             ),
             const SizedBox(height: 2),
@@ -275,7 +374,7 @@ class HomeScreen extends ConsumerWidget {
               title,
               style: GoogleFonts.poppins(
                 fontSize: 13,
-                color: const Color(0xFF6B7280),
+                color: AppColors.textLight,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -290,11 +389,11 @@ class HomeScreen extends ConsumerWidget {
       margin: const EdgeInsets.symmetric(horizontal: 40),
       height: 70,
       decoration: BoxDecoration(
-        color: const Color(0xFF1E1E2C),
+        color: AppColors.textDark,
         borderRadius: BorderRadius.circular(35),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1E1E2C).withOpacity(0.3),
+            color: AppColors.textDark.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
