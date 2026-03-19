@@ -9,6 +9,7 @@ import 'providers/daily_goal_provider.dart';
 import '../../domain/food_model.dart';
 import 'history_screen.dart';
 import 'auth_screen.dart';
+import 'profile_screen.dart'; // 🚀 NAYA IMPORT
 import '../utils/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -16,7 +17,6 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 🚀 JADOO 2: Jab bhi naya khana scan ho (foodProvider update ho), Tracker ko foran refresh karo!
     ref.listen(foodProvider, (previous, next) {
       if (!next.isLoading && next.foodModel != null) {
         ref.invalidate(dailyGoalProvider);
@@ -29,22 +29,31 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        // 👤 🚀 NAYA: Profile Button
+        leading: IconButton(
+          icon: const Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 28),
+          onPressed: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            );
+            // Profile se wapis aane par goal refresh karo
+            ref.invalidate(dailyGoalProvider);
+          },
+        ),
         title: Text('NutriLens', style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: AppColors.textDark, letterSpacing: 1.2)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
-          // 📜 History Button
           IconButton(
             icon: const Icon(Icons.history_rounded, color: AppColors.primary, size: 28),
             onPressed: () async {
-              // 🚀 JADOO 3: Await lagaya hai taake jab tak user History screen pe hai, app wait kare
               await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const HistoryScreen()),
               );
-              // Jaise hi user Back daba kar wapis aayega, yeh line chalegi aur Tracker fresh ho jayega!
               ref.invalidate(dailyGoalProvider);
             },
           ),
@@ -90,7 +99,9 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildGoalTracker(AsyncValue<int> dailyCaloriesState) {
-    const int dailyGoal = 2000;
+    // 🎯 🚀 NAYA Logic: Supabase Metadata se goal uthana
+    final user = Supabase.instance.client.auth.currentUser;
+    final int dailyGoal = user?.userMetadata?['daily_goal'] ?? 2000;
 
     return dailyCaloriesState.when(
       loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
@@ -114,7 +125,13 @@ class HomeScreen extends ConsumerWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    CircularProgressIndicator(value: progress, strokeWidth: 8, backgroundColor: AppColors.textLight.withOpacity(0.1), valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary), strokeCap: StrokeCap.round),
+                    CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 8,
+                        backgroundColor: AppColors.textLight.withOpacity(0.1),
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        strokeCap: StrokeCap.round
+                    ),
                     Center(child: Icon(progress >= 1.0 ? Icons.local_fire_department_rounded : Icons.restaurant_rounded, color: progress >= 1.0 ? Colors.orange : AppColors.primary, size: 30)),
                   ],
                 ),
@@ -138,7 +155,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // Baqi Code UI wala waisa hi hai
+  // --- Baqi UI Functions (image preview, loading, etc.) waisi hi hain ---
   Widget _buildImagePreview(File? image) {
     return Container(height: 300, decoration: BoxDecoration(color: AppColors.cardColor, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 8))]), child: ClipRRect(borderRadius: BorderRadius.circular(24), child: image != null ? Image.file(image, fit: BoxFit.cover, width: double.infinity) : Column(mainAxisAlignment: MainAxisAlignment.center, children: [Container(padding: const EdgeInsets.all(24), decoration: const BoxDecoration(color: Color(0xFFF0F4FF), shape: BoxShape.circle), child: const Icon(Icons.image_search_rounded, size: 50, color: Color(0xFF6B7280))), const SizedBox(height: 20), Text("Upload a food image to analyze", style: GoogleFonts.poppins(color: AppColors.textLight, fontSize: 15, fontWeight: FontWeight.w500))])));
   }
