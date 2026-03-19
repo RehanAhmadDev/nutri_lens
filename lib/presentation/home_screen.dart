@@ -6,10 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/food_provider.dart';
 import 'providers/daily_goal_provider.dart';
+import 'providers/weekly_analytics_provider.dart'; // 🚀 NAYA IMPORT
 import '../../domain/food_model.dart';
 import 'history_screen.dart';
 import 'auth_screen.dart';
-import 'profile_screen.dart'; // 🚀 NAYA IMPORT
+import 'profile_screen.dart';
+import 'analytics_screen.dart'; // 🚀 NAYA IMPORT
 import '../utils/app_colors.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -20,6 +22,7 @@ class HomeScreen extends ConsumerWidget {
     ref.listen(foodProvider, (previous, next) {
       if (!next.isLoading && next.foodModel != null) {
         ref.invalidate(dailyGoalProvider);
+        ref.invalidate(weeklyAnalyticsProvider); // Weekly graph ko bhi invalidate karein
       }
     });
 
@@ -29,7 +32,6 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        // 👤 🚀 NAYA: Profile Button
         leading: IconButton(
           icon: const Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 28),
           onPressed: () async {
@@ -37,7 +39,6 @@ class HomeScreen extends ConsumerWidget {
               context,
               MaterialPageRoute(builder: (context) => const ProfileScreen()),
             );
-            // Profile se wapis aane par goal refresh karo
             ref.invalidate(dailyGoalProvider);
           },
         ),
@@ -47,6 +48,19 @@ class HomeScreen extends ConsumerWidget {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
+          // 📈 🚀 NAYA: Analytics Button
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded, color: AppColors.primary, size: 28),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AnalyticsScreen()),
+              );
+              ref.invalidate(weeklyAnalyticsProvider);
+            },
+          ),
+
+          // 📜 History Button
           IconButton(
             icon: const Icon(Icons.history_rounded, color: AppColors.primary, size: 28),
             onPressed: () async {
@@ -55,8 +69,10 @@ class HomeScreen extends ConsumerWidget {
                 MaterialPageRoute(builder: (context) => const HistoryScreen()),
               );
               ref.invalidate(dailyGoalProvider);
+              ref.invalidate(weeklyAnalyticsProvider);
             },
           ),
+
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 26),
             onPressed: () async {
@@ -72,7 +88,10 @@ class HomeScreen extends ConsumerWidget {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () async => ref.invalidate(dailyGoalProvider),
+        onRefresh: () async {
+          ref.invalidate(dailyGoalProvider);
+          ref.invalidate(weeklyAnalyticsProvider);
+        },
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
@@ -99,7 +118,6 @@ class HomeScreen extends ConsumerWidget {
   }
 
   Widget _buildGoalTracker(AsyncValue<int> dailyCaloriesState) {
-    // 🎯 🚀 NAYA Logic: Supabase Metadata se goal uthana
     final user = Supabase.instance.client.auth.currentUser;
     final int dailyGoal = user?.userMetadata?['daily_goal'] ?? 2000;
 
@@ -155,7 +173,6 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // --- Baqi UI Functions (image preview, loading, etc.) waisi hi hain ---
   Widget _buildImagePreview(File? image) {
     return Container(height: 300, decoration: BoxDecoration(color: AppColors.cardColor, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, spreadRadius: 2, offset: const Offset(0, 8))]), child: ClipRRect(borderRadius: BorderRadius.circular(24), child: image != null ? Image.file(image, fit: BoxFit.cover, width: double.infinity) : Column(mainAxisAlignment: MainAxisAlignment.center, children: [Container(padding: const EdgeInsets.all(24), decoration: const BoxDecoration(color: Color(0xFFF0F4FF), shape: BoxShape.circle), child: const Icon(Icons.image_search_rounded, size: 50, color: Color(0xFF6B7280))), const SizedBox(height: 20), Text("Upload a food image to analyze", style: GoogleFonts.poppins(color: AppColors.textLight, fontSize: 15, fontWeight: FontWeight.w500))])));
   }
