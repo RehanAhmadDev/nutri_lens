@@ -6,7 +6,7 @@ class GeminiService {
   late final GenerativeModel _model;
 
   GeminiService() {
-    // 🚀 Yahan hum ne aap ka naya model laga diya hai jo browser mein show hua!
+    // 🚀 Aap ka apna latest model!
     _model = GenerativeModel(
       model: 'gemini-2.5-flash',
       apiKey: ApiConstants.geminiApiKey,
@@ -23,16 +23,24 @@ class GeminiService {
         DataPart('image/jpeg', imageBytes),
       ];
 
+      // 🧠 NAYA SMART PROMPT (Quantity aur Total Calories ke liye)
       final prompt = TextPart('''
-        Aap ek expert nutritionist hain. Is tasveer ko dekhein aur is mein mojood khane ko pehchanein.
-        Mujhe sirf aur sirf ek JSON object format mein jawab dein, koi izafi text na likhein.
-        JSON format yeh hona chahiye:
+        Aap ek expert AI nutritionist hain. Is tasveer ko dekhein aur is mein mojood khane ko pehchanein.
+
+        ⚠️ ZAROORI HIDAYAT (QUANTITY KE LIYE):
+        1. Agar tasveer mein ek hi cheez ke multiple items hain (maslan 5 samosay, 3 apple), toh 'food_name' ke andar quantity aur 1 piece ki calories zaroor likhein. 
+           Example: "Samosa (x5 pieces - 200 Kcal each)"
+        2. Agar single item hai toh sirf naam likhein. Example: "Apple"
+        3. Niche di gayi 'calories', 'protein', 'carbs', aur 'fats' ki values mein tasveer mein mojood TAMAM items ka GRAND TOTAL jama kar ke (integer mein) likhein.
+
+        Mujhe sirf aur sirf ek JSON object format mein jawab dein, koi izafi text, markdown ya backticks (```) na likhein.
+        JSON format exact yeh hona chahiye:
         {
-          "food_name": "Khane ka naam",
-          "calories": Total estimated calories (integer),
-          "protein": Protein in grams (integer),
-          "carbs": Carbohydrates in grams (integer),
-          "fats": Fats in grams (integer)
+          "food_name": "Khane ka naam (Quantity ke sath agar 1 se zyada hain)",
+          "calories": Total estimated calories sab ka mila kar (integer),
+          "protein": Total Protein in grams (integer),
+          "carbs": Total Carbohydrates in grams (integer),
+          "fats": Total Fats in grams (integer)
         }
       ''');
 
