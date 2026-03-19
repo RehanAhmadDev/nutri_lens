@@ -45,6 +45,7 @@ class FoodNotifier extends StateNotifier<FoodState> {
   final _geminiService = GeminiService();
   final _supabase = Supabase.instance.client;
 
+  // 1️⃣ Scan karne ka function
   Future<void> pickImageAndAnalyze(ImageSource source) async {
     try {
       final pickedFile = await _picker.pickImage(source: source, imageQuality: 80);
@@ -71,20 +72,8 @@ class FoodNotifier extends StateNotifier<FoodState> {
         fats: int.parse(data['fats'].toString()),
       );
 
-      // 🚀 NAYA: Current User ki ID nikalein
-      final userId = _supabase.auth.currentUser?.id;
-      if (userId == null) throw Exception("User is not logged in!");
-
-      // 🚀 NAYA: Database mein data ke sath User ID bhi save karein
-      await _supabase.from('food_scans').insert({
-        'user_id': userId, // Yahan hum user ka thappa (stamp) laga rahe hain
-        'food_name': foodData.foodName,
-        'calories': foodData.calories,
-        'protein': foodData.protein,
-        'carbs': foodData.carbs,
-        'fats': foodData.fats,
-      });
-
+      // 🚨 UPDATE: Yahan se Supabase Save wala code nikal diya gaya hai.
+      // Ab data direct save nahi hoga, sirf screen par show hoga.
       state = state.copyWith(isLoading: false, foodModel: foodData);
 
     } catch (e) {
@@ -92,6 +81,29 @@ class FoodNotifier extends StateNotifier<FoodState> {
         isLoading: false,
         errorMessage: "Error: ${e.toString()}",
       );
+    }
+  }
+
+  // 2️⃣ 🚀 NAYA FUNCTION: Manual Edit/Confirm ke liye (Bilkul sahi jagah par)
+  Future<void> saveEditedFood(FoodModel editedFood) async {
+    try {
+      final userId = _supabase.auth.currentUser?.id;
+      if (userId == null) throw Exception("User is not logged in!");
+
+      await _supabase.from('food_scans').insert({
+        'user_id': userId,
+        'food_name': editedFood.foodName,
+        'calories': editedFood.calories,
+        'protein': editedFood.protein,
+        'carbs': editedFood.carbs,
+        'fats': editedFood.fats,
+      });
+
+      // ✅ Save hone ke baad State saaf kar dein taake nayi picture ke liye screen ready ho jaye
+      state = state.copyWith(foodModel: null, selectedImage: null);
+
+    } catch (e) {
+      state = state.copyWith(errorMessage: "Save Error: ${e.toString()}");
     }
   }
 }
