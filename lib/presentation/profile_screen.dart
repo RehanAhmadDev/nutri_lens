@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../utils/app_colors.dart';
 import 'providers/water_provider.dart';
+import 'providers/theme_provider.dart'; // 🎨 NAYA: Theme Provider import kiya
 import 'auth_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -29,7 +30,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _loadUserData();
   }
 
-  // 📥 User ka data Supabase se load karna
   void _loadUserData() {
     final user = _supabase.auth.currentUser;
     if (user != null) {
@@ -42,9 +42,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  // 💾 Goals save karne ka function
   Future<void> _saveProfile() async {
-    HapticFeedback.mediumImpact(); // 🚀 Professional Haptic Feedback
+    HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
 
     try {
@@ -60,14 +59,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       );
 
-      // Water Provider ko foran update karna
       ref.read(waterProvider.notifier).updateDailyGoal(newWaterGoal);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile saved successfully! ✨'),
-            backgroundColor: AppColors.success,
+          SnackBar(
+            content: const Text('Profile saved successfully! ✨'),
+            backgroundColor: AppColors.success, // 🚀 const hataya
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -76,7 +74,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error),
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error), // 🚀 const hataya
         );
       }
     } finally {
@@ -84,22 +82,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-  // 🛡️ Logout Dialog Function
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardColor,
+        backgroundColor: AppColors.cardColor, // 🚀 const hataya
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Text("Logout",
-            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)), // 🚀 const hataya
         content: Text("Are you sure you want to sign out of NutriLens?",
-            style: GoogleFonts.poppins(color: AppColors.textLight)),
+            style: GoogleFonts.poppins(color: AppColors.textLight)), // 🚀 const hataya
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text("Cancel",
-                style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600)),
+                style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600)), // 🚀 const hataya
           ),
           ElevatedButton(
             onPressed: () async {
@@ -127,15 +124,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 🎨 NAYA: Screen ko pata chalega ke theme konsi active hai
+    final currentTheme = ref.watch(themeProvider);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background, // 🚀 const hataya
       appBar: AppBar(
         title: Text('My Profile',
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: AppColors.textDark)),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: AppColors.textDark)), // 🚀 const hataya
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textDark),
+        iconTheme: IconThemeData(color: AppColors.textDark), // 🚀 const hataya
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
@@ -151,12 +151,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   width: 110,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient( // 🚀 const hataya
                       colors: [AppColors.primary, AppColors.secondary],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.2),
+                        color: AppColors.primary.withOpacity(0.2), // 🚀 const hataya
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       )
@@ -171,22 +171,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(_userName,
-                    style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                    style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark)), // 🚀 const hataya
                 Text(_userEmail,
-                    style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight)),
+                    style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight)), // 🚀 const hataya
               ],
             ),
             const SizedBox(height: 40),
 
-            Text("Personal Goals",
+            // 🎨 NAYA: Theme Picker Section
+            Text("App Theme",
                 style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.cardColor,
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8))],
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _buildThemeCircle(AppThemeMode.premiumTeal, const Color(0xFF0D9488), currentTheme),
+                    const SizedBox(width: 16),
+                    _buildThemeCircle(AppThemeMode.sunsetOrange, const Color(0xFFEA580C), currentTheme),
+                    const SizedBox(width: 16),
+                    _buildThemeCircle(AppThemeMode.royalPurple, const Color(0xFF7C3AED), currentTheme),
+                    const SizedBox(width: 16),
+                    _buildThemeCircle(AppThemeMode.roseRed, const Color(0xFFE11D48), currentTheme),
+                    const SizedBox(width: 16),
+                    _buildThemeCircle(AppThemeMode.midnightBlue, const Color(0xFF1E3A8A), currentTheme),
+                    const SizedBox(width: 16),
+                    _buildThemeCircle(AppThemeMode.emeraldForest, const Color(0xFF047857), currentTheme),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            Text("Personal Goals",
+                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)), // 🚀 const hataya
             const SizedBox(height: 16),
 
             // 🎯 Settings Card
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppColors.cardColor,
+                color: AppColors.cardColor, // 🚀 const hataya
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 8))
@@ -200,7 +233,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     unit: "Kcal",
                     icon: Icons.local_fire_department_rounded,
                     iconColor: Colors.orange,
-                    fillColor: AppColors.background,
+                    fillColor: AppColors.background, // 🚀 const hataya
                   ),
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
@@ -225,7 +258,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveProfile,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.primary, // 🚀 const hataya
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                   elevation: 0,
                 ),
@@ -251,6 +284,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  // 🟢 NAYA: Theme Circle Builder Function
+  Widget _buildThemeCircle(AppThemeMode mode, Color color, AppThemeMode currentTheme) {
+    final isSelected = mode == currentTheme;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        ref.read(themeProvider.notifier).changeTheme(mode);
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        height: 55,
+        width: 55,
+        decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: isSelected ? Border.all(color: AppColors.textDark, width: 3) : null,
+            boxShadow: [
+              if (isSelected) BoxShadow(color: color.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 5))
+            ]
+        ),
+        child: isSelected ? const Icon(Icons.check_rounded, color: Colors.white, size: 28) : null,
+      ),
+    );
+  }
+
   // 🏗️ Goal Field Builder
   Widget _buildGoalField({
     required TextEditingController controller,
@@ -264,7 +322,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textLight, fontWeight: FontWeight.w600)),
+            style: GoogleFonts.poppins(fontSize: 13, color: AppColors.textLight, fontWeight: FontWeight.w600)), // 🚀 const hataya
         const SizedBox(height: 12),
         TextField(
           controller: controller,
@@ -273,7 +331,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: iconColor, size: 22),
             suffixText: unit,
-            suffixStyle: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w500),
+            suffixStyle: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w500), // 🚀 const hataya
             filled: true,
             fillColor: fillColor,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

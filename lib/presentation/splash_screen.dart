@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _navigateToNextScreen() async {
-    // ⏳ 2.5 seconds wait karein (Bohat lamba splash bhi bura lagta hai)
+    // ⏳ 2.5 seconds wait
     await Future.delayed(const Duration(milliseconds: 2500));
 
     if (!mounted) return;
@@ -50,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     final session = Supabase.instance.client.auth.currentSession;
     Widget nextScreen = session != null ? const HomeScreen() : const AuthScreen();
 
-    // 🚀 NAYA: Smooth Fade Transition
+    // 🚀 Smooth Fade Transition
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
@@ -72,10 +72,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack( // 🚀 NAYA: Stack use kiya taake branding neechay aa sakay
+      backgroundColor: AppColors.background, // 🚀 Theme Aware
+      body: Stack(
         children: [
-          // ✨ Background Element (Halka sa gradient circle pichay)
+          // ✨ Background Element
           Positioned(
             top: -100,
             right: -100,
@@ -84,7 +84,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               width: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withOpacity(0.05), // 🚀 Theme Aware
               ),
             ),
           ),
@@ -105,14 +105,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           padding: const EdgeInsets.all(28),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient( // 🚀 const hataya
                               colors: [AppColors.primary, AppColors.secondary],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primary.withOpacity(0.3),
+                                color: AppColors.primary.withOpacity(0.3), // 🚀 Theme Aware
                                 blurRadius: 40,
                                 spreadRadius: 5,
                                 offset: const Offset(0, 15),
@@ -129,24 +129,24 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                           style: GoogleFonts.poppins(
                             fontSize: 42,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textDark,
+                            color: AppColors.textDark, // 🚀 Theme Aware
                             letterSpacing: 2.0,
                           ),
                         ),
                         const SizedBox(height: 12),
 
-                        // ✨ Tagline with soft divider
+                        // ✨ Tagline
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
+                            color: AppColors.primary.withOpacity(0.1), // 🚀 Theme Aware
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             'AI-POWERED NUTRITION',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
-                              color: AppColors.primary,
+                              color: AppColors.primary, // 🚀 Theme Aware
                               fontWeight: FontWeight.w700,
                               letterSpacing: 1.2,
                             ),
@@ -160,7 +160,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
             ),
           ),
 
-          // 🚀 NAYA: Bottom Branding
+          // 🚀 Bottom Branding
           Align(
             alignment: Alignment.bottomCenter,
             child: Padding(
@@ -170,7 +170,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const CircularProgressIndicator(
+                    CircularProgressIndicator( // 🚀 const hataya
                       strokeWidth: 2,
                       valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
@@ -179,7 +179,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       'SECURE & PRIVATE',
                       style: GoogleFonts.poppins(
                         fontSize: 10,
-                        color: AppColors.textLight.withOpacity(0.6),
+                        color: AppColors.textLight.withOpacity(0.6), // 🚀 Theme Aware
                         fontWeight: FontWeight.w600,
                         letterSpacing: 2.0,
                       ),

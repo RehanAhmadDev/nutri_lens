@@ -5,10 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/app_colors.dart';
 import 'providers/daily_goal_provider.dart';
 
-// 🚀 NAYA: Search query ko yaad rakhne ke liye ek chota sa provider
 final searchQueryProvider = StateProvider.autoDispose<String>((ref) => '');
 
-// Asal provider jo sirf 1 dafa Supabase se data layega
 final historyProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final supabase = Supabase.instance.client;
   final userId = supabase.auth.currentUser?.id;
@@ -30,24 +28,24 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyState = ref.watch(historyProvider);
-    final searchQuery = ref.watch(searchQueryProvider); // 🚀 NAYA: Search word ko watch karein
+    final searchQuery = ref.watch(searchQueryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.background, // 🚀 const hataya
       appBar: AppBar(
         title: Text(
           'My Diet History',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: AppColors.textDark),
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w700, color: AppColors.textDark), // 🚀 const hataya
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textDark),
+        iconTheme: IconThemeData(color: AppColors.textDark), // 🚀 const hataya
         actions: [
           historyState.maybeWhen(
             data: (data) => data.isNotEmpty
                 ? IconButton(
-              icon: const Icon(Icons.delete_sweep_rounded, color: AppColors.error, size: 28),
+              icon: Icon(Icons.delete_sweep_rounded, color: AppColors.error, size: 28), // 🚀 const hataya
               onPressed: () => _showClearAllDialog(context, ref),
             )
                 : const SizedBox.shrink(),
@@ -57,23 +55,22 @@ class HistoryScreen extends ConsumerWidget {
         ],
       ),
       body: historyState.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (error, stack) => Center(child: Text('Error: $error', style: GoogleFonts.poppins(color: AppColors.error))),
+        loading: () => Center(child: CircularProgressIndicator(color: AppColors.primary)), // 🚀 const hataya
+        error: (error, stack) => Center(child: Text('Error: $error', style: GoogleFonts.poppins(color: AppColors.error))), // 🚀 const hataya
         data: (data) {
 
-          // 🚀 JADOO 2: Local Filtering - Data base se aagaya, ab yahin filter karo!
           final filteredData = searchQuery.isEmpty
               ? data
               : data.where((item) => item['food_name'].toString().toLowerCase().contains(searchQuery.toLowerCase())).toList();
 
           return Column(
             children: [
-              // 🔍 🚀 NAYA: Khoobsurat Search Bar (Error Fixed)
+              // 🔍 Search Bar
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.cardColor, // 🚀 const hataya
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
@@ -87,47 +84,46 @@ class HistoryScreen extends ConsumerWidget {
                     onChanged: (value) => ref.read(searchQueryProvider.notifier).state = value,
                     decoration: InputDecoration(
                       hintText: "Search your food (e.g. Samosa)",
-                      hintStyle: GoogleFonts.poppins(color: AppColors.textLight),
-                      prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary),
+                      hintStyle: GoogleFonts.poppins(color: AppColors.textLight), // 🚀 const hataya
+                      prefixIcon: Icon(Icons.search_rounded, color: AppColors.primary), // 🚀 const hataya
                       suffixIcon: searchQuery.isNotEmpty
                           ? IconButton(
-                        icon: const Icon(Icons.clear_rounded, color: AppColors.textLight),
+                        icon: Icon(Icons.clear_rounded, color: AppColors.textLight), // 🚀 const hataya
                         onPressed: () => ref.read(searchQueryProvider.notifier).state = '',
                       )
                           : null,
                       contentPadding: const EdgeInsets.symmetric(vertical: 16),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none, // 🚀 Border hata di taake shadow container ki dikhe
+                        borderSide: BorderSide.none,
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                        borderSide: BorderSide(color: AppColors.primary, width: 2), // 🚀 const hataya
                       ),
                     ),
                   ),
                 ),
               ),
 
-              // Agar Data khali hai (ya search result nahi mila)
+              // Empty States
               if (data.isEmpty || filteredData.isEmpty)
                 Expanded(
                   child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(searchQuery.isEmpty ? Icons.history_rounded : Icons.search_off_rounded, size: 80, color: AppColors.textLight.withOpacity(0.4)),
+                        Icon(searchQuery.isEmpty ? Icons.history_rounded : Icons.search_off_rounded, size: 80, color: AppColors.textLight.withOpacity(0.4)), // 🚀 const hataya
                         const SizedBox(height: 16),
                         Text(
                             searchQuery.isEmpty ? "No food scanned yet!" : "No matches found for '$searchQuery'",
-                            style: GoogleFonts.poppins(fontSize: 16, color: AppColors.textLight)
+                            style: GoogleFonts.poppins(fontSize: 16, color: AppColors.textLight) // 🚀 const hataya
                         ),
                       ],
                     ),
                   ),
                 )
               else
-              // Asal List View
                 Expanded(
                   child: Column(
                     children: [
@@ -136,9 +132,9 @@ class HistoryScreen extends ConsumerWidget {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.swipe_left_rounded, size: 16, color: AppColors.textLight),
+                            Icon(Icons.swipe_left_rounded, size: 16, color: AppColors.textLight), // 🚀 const hataya
                             const SizedBox(width: 8),
-                            Text("Swipe left on any card to delete", style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textLight, fontWeight: FontWeight.w500)),
+                            Text("Swipe left on any card to delete", style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textLight, fontWeight: FontWeight.w500)), // 🚀 const hataya
                           ],
                         ),
                       ),
@@ -163,7 +159,7 @@ class HistoryScreen extends ConsumerWidget {
                               },
                               background: Container(
                                 margin: const EdgeInsets.only(bottom: 16),
-                                decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(20)),
+                                decoration: BoxDecoration(color: AppColors.error, borderRadius: BorderRadius.circular(20)), // 🚀 const hataya
                                 alignment: Alignment.centerRight,
                                 padding: const EdgeInsets.symmetric(horizontal: 24),
                                 child: const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 32),
@@ -183,18 +179,16 @@ class HistoryScreen extends ConsumerWidget {
     );
   }
 
-  // --- Neeche wale saare functions bilkul wese hi hain jaise aapne banaye thay ---
-
   Future<bool?> _showDeleteConfirmDialog(BuildContext context) {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardColor,
-        title: Text('Delete Item?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)),
-        content: Text('Are you sure you want to delete this food item?', style: GoogleFonts.poppins(color: AppColors.textLight)),
+        backgroundColor: AppColors.cardColor, // 🚀 const hataya
+        title: Text('Delete Item?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)), // 🚀 const hataya
+        content: Text('Are you sure you want to delete this food item?', style: GoogleFonts.poppins(color: AppColors.textLight)), // 🚀 const hataya
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('Cancel', style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600))),
-          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: AppColors.error), onPressed: () => Navigator.of(context).pop(true), child: Text('Delete', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold))),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text('Cancel', style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600))), // 🚀 const hataya
+          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: AppColors.error), onPressed: () => Navigator.of(context).pop(true), child: Text('Delete', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold))), // 🚀 const hataya
         ],
       ),
     );
@@ -209,7 +203,7 @@ class HistoryScreen extends ConsumerWidget {
       ref.invalidate(dailyGoalProvider);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${foodName.toUpperCase()} deleted!'), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${foodName.toUpperCase()} deleted!'), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating)); // 🚀 const hataya
       }
     } catch (e) {
       debugPrint("Delete Error: $e");
@@ -220,13 +214,13 @@ class HistoryScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.cardColor,
-        title: Text('Clear All History?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)),
-        content: Text('Are you sure you want to permanently delete all your scanned food history?', style: GoogleFonts.poppins(color: AppColors.textLight)),
+        backgroundColor: AppColors.cardColor, // 🚀 const hataya
+        title: Text('Clear All History?', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)), // 🚀 const hataya
+        content: Text('Are you sure you want to permanently delete all your scanned food history?', style: GoogleFonts.poppins(color: AppColors.textLight)), // 🚀 const hataya
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600))),
+          TextButton(onPressed: () => Navigator.pop(context), child: Text('Cancel', style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600))), // 🚀 const hataya
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error), // 🚀 const hataya
             onPressed: () async {
               Navigator.pop(context);
               await _deleteAllHistory(context, ref);
@@ -249,7 +243,7 @@ class HistoryScreen extends ConsumerWidget {
         ref.invalidate(dailyGoalProvider);
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All history cleared!'), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating));
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: const Text('All history cleared!'), backgroundColor: AppColors.primary, behavior: SnackBarBehavior.floating)); // 🚀 const hataya
         }
       }
     } catch (e) {
@@ -263,14 +257,14 @@ class HistoryScreen extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(color: AppColors.cardColor, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))]),
+      decoration: BoxDecoration(color: AppColors.cardColor, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))]), // 🚀 const hataya
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(gradient: const LinearGradient(colors: [AppColors.primary, AppColors.secondary]), borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.secondary]), borderRadius: BorderRadius.circular(16)), // 🚀 const hataya
               child: Column(children: [Text("${item['calories']}", style: GoogleFonts.poppins(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)), Text("Kcal", style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12))]),
             ),
             const SizedBox(width: 16),
@@ -278,9 +272,9 @@ class HistoryScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item['food_name'].toString().toUpperCase(), style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                  Text(item['food_name'].toString().toUpperCase(), style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textDark)), // 🚀 const hataya
                   const SizedBox(height: 4),
-                  Row(children: [Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textLight), const SizedBox(width: 4), Text(formattedDate, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textLight))]),
+                  Row(children: [Icon(Icons.calendar_today_rounded, size: 14, color: AppColors.textLight), const SizedBox(width: 4), Text(formattedDate, style: GoogleFonts.poppins(fontSize: 12, color: AppColors.textLight))]), // 🚀 const hataya
                   const SizedBox(height: 8),
                   Row(children: [_buildMiniMacro("P: ${item['protein']}g", Colors.blue), const SizedBox(width: 8), _buildMiniMacro("C: ${item['carbs']}g", Colors.green), const SizedBox(width: 8), _buildMiniMacro("F: ${item['fats']}g", Colors.orange)]),
                 ],

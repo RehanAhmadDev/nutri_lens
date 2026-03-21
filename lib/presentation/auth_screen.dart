@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../utils/app_colors.dart'; // 🎨 NAYA: AppColors import kiya hai
+import '../utils/app_colors.dart';
 import 'home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
@@ -63,7 +63,7 @@ class _AuthScreenState extends State<AuthScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
           content: Text(message),
-          backgroundColor: AppColors.error, // 🎨 Updated
+          backgroundColor: AppColors.error, // 🚀 const hataya
           behavior: SnackBarBehavior.floating
       ),
     );
@@ -72,7 +72,7 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background, // 🎨 Updated
+      backgroundColor: AppColors.background, // 🚀 const hataya
       body: Center(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -86,13 +86,13 @@ class _AuthScreenState extends State<AuthScreen> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary], // 🎨 Updated
+                  gradient: LinearGradient( // 🚀 const hataya
+                    colors: [AppColors.primary, AppColors.secondary],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
-                    BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)), // 🎨 Updated
+                    BoxShadow(color: AppColors.primary.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10)), // 🚀 const hataya
                   ],
                 ),
                 child: const Icon(Icons.center_focus_strong_rounded, size: 60, color: Colors.white),
@@ -103,12 +103,12 @@ class _AuthScreenState extends State<AuthScreen> {
               Text(
                 _isLogin ? 'Welcome Back!' : 'Join NutriLens',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textDark), // 🎨 Updated
+                style: GoogleFonts.poppins(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textDark), // 🚀 const hataya
               ),
               Text(
                 _isLogin ? 'Log in to track your daily nutrition.' : 'Create an account to start your fitness journey.',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight), // 🎨 Updated
+                style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight), // 🚀 const hataya
               ),
               const SizedBox(height: 40),
 
@@ -116,7 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.cardColor, // 🎨 Updated
+                  color: AppColors.cardColor, // 🚀 const hataya
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10)),
@@ -166,13 +166,13 @@ class _AuthScreenState extends State<AuthScreen> {
                 height: 56,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  gradient: const LinearGradient(
-                    colors: [AppColors.primary, AppColors.secondary], // 🎨 Updated
+                  gradient: LinearGradient( // 🚀 const hataya
+                    colors: [AppColors.primary, AppColors.secondary],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
                   boxShadow: [
-                    BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)), // 🎨 Updated
+                    BoxShadow(color: AppColors.primary.withOpacity(0.4), blurRadius: 15, offset: const Offset(0, 8)), // 🚀 const hataya
                   ],
                 ),
                 child: ElevatedButton(
@@ -198,7 +198,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 children: [
                   Text(
                     _isLogin ? "Don't have an account? " : "Already have an account? ",
-                    style: GoogleFonts.poppins(color: AppColors.textLight), // 🎨 Updated
+                    style: GoogleFonts.poppins(color: AppColors.textLight), // 🚀 const hataya
                   ),
                   GestureDetector(
                     onTap: () => setState(() {
@@ -208,7 +208,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     }),
                     child: Text(
                       _isLogin ? "Sign Up" : "Log In",
-                      style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.bold), // 🎨 Updated
+                      style: GoogleFonts.poppins(color: AppColors.primary, fontWeight: FontWeight.bold), // 🚀 const hataya
                     ),
                   ),
                 ],
@@ -228,8 +228,8 @@ class _AuthScreenState extends State<AuthScreen> {
       keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.poppins(color: AppColors.textLight.withOpacity(0.6), fontSize: 14), // 🎨 Updated
-        prefixIcon: Icon(icon, color: AppColors.primary, size: 22), // 🎨 Updated
+        hintStyle: GoogleFonts.poppins(color: AppColors.textLight.withOpacity(0.6), fontSize: 14), // 🚀 const hataya
+        prefixIcon: Icon(icon, color: AppColors.primary, size: 22), // 🚀 const hataya
         filled: true,
         fillColor: const Color(0xFFF4F6F9),
         contentPadding: const EdgeInsets.symmetric(vertical: 16),
@@ -239,7 +239,7 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.primary, width: 1.5), // 🎨 Updated
+          borderSide: BorderSide(color: AppColors.primary, width: 1.5), // 🚀 const hataya
         ),
       ),
     );
