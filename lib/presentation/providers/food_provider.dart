@@ -72,8 +72,6 @@ class FoodNotifier extends StateNotifier<FoodState> {
         fats: int.parse(data['fats'].toString()),
       );
 
-      // 🚨 UPDATE: Yahan se Supabase Save wala code nikal diya gaya hai.
-      // Ab data direct save nahi hoga, sirf screen par show hoga.
       state = state.copyWith(isLoading: false, foodModel: foodData);
 
     } catch (e) {
@@ -84,7 +82,7 @@ class FoodNotifier extends StateNotifier<FoodState> {
     }
   }
 
-  // 2️⃣ 🚀 NAYA FUNCTION: Manual Edit/Confirm ke liye (Bilkul sahi jagah par)
+  // 2️⃣ 🚀 Manual Edit/Confirm ke liye
   Future<void> saveEditedFood(FoodModel editedFood) async {
     try {
       final userId = _supabase.auth.currentUser?.id;
@@ -99,8 +97,9 @@ class FoodNotifier extends StateNotifier<FoodState> {
         'fats': editedFood.fats,
       });
 
-      // ✅ Save hone ke baad State saaf kar dein taake nayi picture ke liye screen ready ho jaye
-      state = state.copyWith(foodModel: null, selectedImage: null);
+      // 🚀 JADOO FIX: Yahan 'copyWith' ki jagah ek bilkul naya (Khali) state de diya hai.
+      // Is se image aur result foran UI se saaf (clear) ho jayenge!
+      state = FoodState();
 
     } catch (e) {
       state = state.copyWith(errorMessage: "Save Error: ${e.toString()}");

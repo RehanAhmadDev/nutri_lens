@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/food_provider.dart';
 import 'providers/daily_goal_provider.dart';
 import 'providers/weekly_analytics_provider.dart';
+import 'providers/water_provider.dart'; // 💧 NAYA: Water Provider import kiya
 import '../../domain/food_model.dart';
 import 'history_screen.dart';
 import 'auth_screen.dart';
@@ -96,12 +97,13 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildGoalTracker(dailyCaloriesState),
+                const SizedBox(height: 20), // Thoda gap diya
+                _buildWaterTracker(context, ref), // 💧 NAYA: Water Tracker Yahan Add Kiya
                 const SizedBox(height: 32),
                 _buildImagePreview(foodState.selectedImage),
                 const SizedBox(height: 32),
                 if (foodState.isLoading) _buildLoadingState()
                 else if (foodState.errorMessage.isNotEmpty) _buildErrorState(foodState.errorMessage)
-                // 🚀 UPDATE: Context aur Ref pass kiya gaya hai yahan
                 else if (foodState.foodModel != null) _buildPremiumResultCard(context, ref, foodState.foodModel!),
                 const SizedBox(height: 120),
               ],
@@ -111,6 +113,89 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _buildModernActionDock(ref),
+    );
+  }
+
+  // 💧 🚀 NAYA FUNCTION: Water Tracker ka Khubsurat UI
+  Widget _buildWaterTracker(BuildContext context, WidgetRef ref) {
+    final waterState = ref.watch(waterProvider);
+    final waterNotifier = ref.read(waterProvider.notifier);
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEBF8FF), // Halka Neela (Light Blue) background
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFF90CDF4), width: 1.5), // Neeli border
+        boxShadow: [BoxShadow(color: const Color(0xFF4299E1).withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.water_drop_rounded, color: Color(0xFF3182CE), size: 28),
+                  const SizedBox(width: 8),
+                  Text("Water Tracker", style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF2B6CB0))),
+                ],
+              ),
+              Text(
+                "${waterState.consumedGlasses} / ${waterState.dailyGoal} Glasses",
+                style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF3182CE)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Glasses Row (Icons)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: List.generate(waterState.dailyGoal, (index) {
+              bool isFilled = index < waterState.consumedGlasses;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                  child: Icon(
+                    isFilled ? Icons.local_drink_rounded : Icons.local_drink_outlined,
+                    color: isFilled ? const Color(0xFF3182CE) : const Color(0xFF90CDF4),
+                    size: 26,
+                  ),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
+          // Action Buttons
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                onPressed: () => waterNotifier.removeGlass(),
+                icon: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFFE53E3E), size: 30),
+                tooltip: "Remove Glass",
+              ),
+              const SizedBox(width: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  if (waterState.consumedGlasses < waterState.dailyGoal) {
+                    waterNotifier.addGlass();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Daily Water Goal Completed! 💧🎉'), backgroundColor: Color(0xFF3182CE)));
+                  }
+                },
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
+                label: Text("Drink Water", style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3182CE),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -182,7 +267,6 @@ class HomeScreen extends ConsumerWidget {
     return Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFFCA5A5))), child: Row(children: [const Icon(Icons.error_outline_rounded, color: AppColors.error, size: 32), const SizedBox(width: 16), Expanded(child: Text(error, style: GoogleFonts.poppins(color: AppColors.error, fontWeight: FontWeight.w500)))]));
   }
 
-  // 🚀 UPDATE: Context aur Ref add kiya gaya + Edit/Save Buttons
   Widget _buildPremiumResultCard(BuildContext context, WidgetRef ref, FoodModel food) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -216,7 +300,6 @@ class HomeScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 32),
 
-        // 🚀 NAYE BUTTONS: Edit aur Save
         Row(
           children: [
             Expanded(
@@ -268,7 +351,6 @@ class HomeScreen extends ConsumerWidget {
     return Container(margin: const EdgeInsets.symmetric(horizontal: 40), height: 70, decoration: BoxDecoration(color: AppColors.textDark, borderRadius: BorderRadius.circular(35), boxShadow: [BoxShadow(color: AppColors.textDark.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]), child: Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [Expanded(child: InkWell(onTap: () => ref.read(foodProvider.notifier).pickImageAndAnalyze(ImageSource.gallery), borderRadius: const BorderRadius.horizontal(left: Radius.circular(35)), child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.photo_library_rounded, color: Colors.white, size: 24), SizedBox(height: 4), Text("Gallery", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600))]))), Container(width: 1, height: 40, color: Colors.white.withOpacity(0.2)), Expanded(child: InkWell(onTap: () => ref.read(foodProvider.notifier).pickImageAndAnalyze(ImageSource.camera), borderRadius: const BorderRadius.horizontal(right: Radius.circular(35)), child: const Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.camera_alt_rounded, color: Colors.white, size: 24), SizedBox(height: 4), Text("Camera", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600))])))]));
   }
 
-  // 🚀 NAYA FUNCTION: Edit karne ka Popup (Dialog)
   void _showEditDialog(BuildContext context, WidgetRef ref, FoodModel currentFood) {
     final nameController = TextEditingController(text: currentFood.foodName);
     final caloriesController = TextEditingController(text: currentFood.calories.toString());
