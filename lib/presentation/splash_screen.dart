@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,7 +22,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   void initState() {
     super.initState();
 
-    // 🎬 Animation Setup (Fade in and Scale up)
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
@@ -32,30 +32,35 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       curve: Curves.easeIn,
     ));
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(CurvedAnimation(
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutBack,
     ));
 
     _controller.forward();
-
-    // ⏳ 3 Seconds wait karein aur phir agli screen par le jayen
     _navigateToNextScreen();
   }
 
   Future<void> _navigateToNextScreen() async {
-    await Future.delayed(const Duration(seconds: 3));
+    // ⏳ 2.5 seconds wait karein (Bohat lamba splash bhi bura lagta hai)
+    await Future.delayed(const Duration(milliseconds: 2500));
 
     if (!mounted) return;
 
-    // 🕵️‍♂️ Check karein user login hai ya nahi
     final session = Supabase.instance.client.auth.currentSession;
+    Widget nextScreen = session != null ? const HomeScreen() : const AuthScreen();
 
-    if (session != null) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
-    } else {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const AuthScreen()));
-    }
+    // 🚀 NAYA: Smooth Fade Transition
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => nextScreen,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+        transitionDuration: const Duration(milliseconds: 800),
+      ),
+    );
   }
 
   @override
@@ -67,66 +72,124 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // 🎨 Yahan humne apni nayi AppColors use ki hai
       backgroundColor: AppColors.background,
-      body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Opacity(
-              opacity: _fadeAnimation.value,
-              child: Transform.scale(
-                scale: _scaleAnimation.value,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // 🌟 Premium Animated Logo
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.secondary],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.4),
-                            blurRadius: 30,
-                            offset: const Offset(0, 10),
+      body: Stack( // 🚀 NAYA: Stack use kiya taake branding neechay aa sakay
+        children: [
+          // ✨ Background Element (Halka sa gradient circle pichay)
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              height: 300,
+              width: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.primary.withOpacity(0.05),
+              ),
+            ),
+          ),
+
+          Center(
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // 🌟 Premium Animated Logo
+                        Container(
+                          padding: const EdgeInsets.all(28),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              colors: [AppColors.primary, AppColors.secondary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primary.withOpacity(0.3),
+                                blurRadius: 40,
+                                spreadRadius: 5,
+                                offset: const Offset(0, 15),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      child: const Icon(Icons.health_and_safety_rounded, size: 80, color: Colors.white),
+                          child: const Icon(Icons.auto_awesome_rounded, size: 70, color: Colors.white),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // 📝 App Name
+                        Text(
+                          'NutriLens',
+                          style: GoogleFonts.poppins(
+                            fontSize: 42,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
+                            letterSpacing: 2.0,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // ✨ Tagline with soft divider
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'AI-POWERED NUTRITION',
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // 🚀 NAYA: Bottom Branding
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 40.0),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                     const SizedBox(height: 24),
-
-                    // 📝 App Name
                     Text(
-                      'NutriLens',
+                      'SECURE & PRIVATE',
                       style: GoogleFonts.poppins(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Your AI Diet Assistant',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        color: AppColors.textLight,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 10,
+                        color: AppColors.textLight.withOpacity(0.6),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 2.0,
                       ),
                     ),
                   ],
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
