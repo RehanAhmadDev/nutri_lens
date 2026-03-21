@@ -4,12 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class WaterState {
   final int consumedGlasses;
-  final int dailyGoal;
-  final Map<String, int> waterHistory; // 🚀 NAYA: Pichle tamaam dino ka record
+  final int dailyGoal; // 🚀 Ab yeh Profile se update hoga
+  final Map<String, int> waterHistory;
 
   WaterState({
     this.consumedGlasses = 0,
-    this.dailyGoal = 8,
+    this.dailyGoal = 8, // Default 8 hai
     this.waterHistory = const {},
   });
 
@@ -32,45 +32,49 @@ final waterProvider = StateNotifierProvider<WaterNotifier, WaterState>((ref) {
 
 class WaterNotifier extends StateNotifier<WaterState> {
   WaterNotifier() : super(WaterState()) {
-    _loadWaterData(); // App khulte hi history load karo
+    _loadWaterData(); // App khulte hi history aur goal load karo
   }
 
-  // Aaj ki date nikalne ka shortcut (Format: yyyy-mm-dd)
   String get _today => DateTime.now().toString().split(' ')[0];
 
-  // 1️⃣ Phone ki memory se poori HISTORY load karna
+  // 1️⃣ Phone ki memory se HISTORY aur GOAL load karna
   Future<void> _loadWaterData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // Memory se purana JSON data nikalo, agar nahi hai toh khali '{}' de do
+    // Custom Goal load karo (agar kisi ne profile mein set kiya tha), warna 8
+    final savedGoal = prefs.getInt('water_goal') ?? 8;
+
     final historyString = prefs.getString('water_history') ?? '{}';
     final Map<String, dynamic> decodedMap = jsonDecode(historyString);
-
-    // Dynamic map ko proper Map<String, int> mein badlo
     final Map<String, int> history = decodedMap.map((key, value) => MapEntry(key, value as int));
 
-    // Aaj ke din ka paani check karo (agar aaj kuch nahi piya toh 0)
     final todayGlasses = history[_today] ?? 0;
 
-    // State ko update karo
-    state = state.copyWith(consumedGlasses: todayGlasses, waterHistory: history);
+    // 🚀 State update karo (Consumed glasses, History, aur Naya Goal)
+    state = state.copyWith(
+      consumedGlasses: todayGlasses,
+      waterHistory: history,
+      dailyGoal: savedGoal,
+    );
   }
 
-  // 2️⃣ History ko update karna aur Memory mein Save karna
+  // 2️⃣ History ko update karna
   Future<void> _saveWaterData(int glasses) async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Purani history ki ek copy banao
     final Map<String, int> newHistory = Map.from(state.waterHistory);
-
-    // Aaj ki date mein naye glasses update karo
     newHistory[_today] = glasses;
-
-    // JSON format mein memory mein lock (save) kar do
     await prefs.setString('water_history', jsonEncode(newHistory));
 
-    // Screen (UI) ko update karne ke liye state change karo
     state = state.copyWith(consumedGlasses: glasses, waterHistory: newHistory);
+  }
+
+  // ⚙️ 🚀 NAYA: Profile screen se jab naya goal set ho, toh usay update aur save karo
+  Future<void> updateDailyGoal(int newGoal) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('water_goal', newGoal); // Phone mein hamesha ke liye save
+
+    // Foran UI ko update karo
+    state = state.copyWith(dailyGoal: newGoal);
   }
 
   // 💧 Glass add karna

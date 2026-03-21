@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // 🚀 NAYA
 import '../utils/app_colors.dart';
+import 'providers/water_provider.dart'; // 💧 NAYA: Water provider import kiya
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _supabase = Supabase.instance.client;
   final _goalController = TextEditingController();
+  final _waterGoalController = TextEditingController(); // 💧 NAYA: Water Goal ka controller
 
   String _userName = "User";
   String _userEmail = "";
@@ -30,26 +33,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user != null) {
       setState(() {
         _userEmail = user.email ?? "";
-        // Metadata se naam aur goal nikalna (agar na ho toh default 2000)
         _userName = user.userMetadata?['full_name'] ?? "NutriLens User";
         _goalController.text = (user.userMetadata?['daily_goal'] ?? 2000).toString();
+        // 💧 NAYA: Water goal nikalna (default 8)
+        _waterGoalController.text = (user.userMetadata?['water_goal'] ?? 8).toString();
       });
     }
   }
 
-  // 💾 Naya Goal Cloud par save karna
+  // 💾 Naye Goals Cloud par save karna
   Future<void> _saveProfile() async {
     setState(() => _isLoading = true);
 
     try {
-      final newGoal = int.tryParse(_goalController.text.trim()) ?? 2000;
+      final newCalGoal = int.tryParse(_goalController.text.trim()) ?? 2000;
+      final newWaterGoal = int.tryParse(_waterGoalController.text.trim()) ?? 8; // 💧 NAYA
 
-      // Supabase ke metadata mein daily_goal update karna
+      // Supabase ke metadata mein dono goals update karna
       await _supabase.auth.updateUser(
         UserAttributes(
-          data: {'daily_goal': newGoal},
+          data: {
+            'daily_goal': newCalGoal,
+            'water_goal': newWaterGoal, // 💧 NAYA
+          },
         ),
       );
+
+      // 💧 Provider ko update karein taake Home Screen foran change ho jaye
+      ref.read(waterProvider.notifier).updateDailyGoal(newWaterGoal);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -128,6 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 🔥 Calories Goal
                   Text("Daily Calorie Goal (Kcal)", style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   TextField(
@@ -140,6 +152,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       fillColor: AppColors.background,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                       focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: AppColors.primary, width: 1.5)),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // 💧 Water Goal
+                  Text("Daily Water Goal (Glasses)", style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textLight, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _waterGoalController,
+                    keyboardType: TextInputType.number,
+                    style: GoogleFonts.poppins(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF3182CE)),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.water_drop_rounded, color: Color(0xFF3182CE)),
+                      filled: true,
+                      fillColor: const Color(0xFFEBF8FF), // Light Blue
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF3182CE), width: 1.5)),
                     ),
                   ),
                 ],
@@ -172,6 +201,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void dispose() {
     _goalController.dispose();
+    _waterGoalController.dispose();
     super.dispose();
   }
 }
