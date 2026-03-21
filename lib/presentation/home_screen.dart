@@ -7,7 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'providers/food_provider.dart';
 import 'providers/daily_goal_provider.dart';
 import 'providers/weekly_analytics_provider.dart';
-import 'providers/water_provider.dart'; // 💧 NAYA: Water Provider import kiya
+import 'providers/water_provider.dart';
 import '../../domain/food_model.dart';
 import 'history_screen.dart';
 import 'auth_screen.dart';
@@ -15,15 +15,42 @@ import 'profile_screen.dart';
 import 'analytics_screen.dart';
 import '../utils/app_colors.dart';
 
-class HomeScreen extends ConsumerWidget {
+// 🚀 NAYA: ConsumerWidget ko ConsumerStatefulWidget mein badal diya taake Scroll Controller lag sake
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  // 🚀 NAYA: Auto-scroll ke liye ek controller banaya
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // 🚀 NAYA: Yahan hum sun rahe hain ke kab result aata hai
     ref.listen(foodProvider, (previous, next) {
       if (!next.isLoading && next.foodModel != null) {
         ref.invalidate(dailyGoalProvider);
         ref.invalidate(weeklyAnalyticsProvider);
+
+        // 🚀 JADOO: Jaise hi result aaye, 300 milliseconds baad screen ko neechay scroll kar do
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent, // Screen ke bilkul aakhir tak le jao
+              duration: const Duration(milliseconds: 800), // Smooth sliding effect
+              curve: Curves.easeOutCubic,
+            );
+          }
+        });
       }
     });
 
@@ -73,11 +100,43 @@ class HomeScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 26),
             onPressed: () async {
-              ref.invalidate(foodProvider);
-              ref.invalidate(dailyGoalProvider);
-              await Supabase.instance.client.auth.signOut();
-              if (context.mounted) {
-                Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const AuthScreen()), (route) => false);
+              final bool? confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: AppColors.cardColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  title: Row(
+                    children: [
+                      const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                      const SizedBox(width: 8),
+                      Text('Sign Out', style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                    ],
+                  ),
+                  content: Text('Are you sure you want to sign out?', style: GoogleFonts.poppins(color: AppColors.textLight)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text('Cancel', style: GoogleFonts.poppins(color: AppColors.textLight, fontWeight: FontWeight.w600)),
+                    ),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                      ),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text('Sign Out', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                ref.invalidate(foodProvider);
+                ref.invalidate(dailyGoalProvider);
+                await Supabase.instance.client.auth.signOut();
+                if (context.mounted) {
+                  Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const AuthScreen()), (route) => false);
+                }
               }
             },
           ),
@@ -90,6 +149,7 @@ class HomeScreen extends ConsumerWidget {
           ref.invalidate(weeklyAnalyticsProvider);
         },
         child: SingleChildScrollView(
+          controller: _scrollController, // 🚀 NAYA: Scroll controller yahan attach kar diya
           physics: const BouncingScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
@@ -97,8 +157,8 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildGoalTracker(dailyCaloriesState),
-                const SizedBox(height: 20), // Thoda gap diya
-                _buildWaterTracker(context, ref), // 💧 NAYA: Water Tracker Yahan Add Kiya
+                const SizedBox(height: 20),
+                _buildWaterTracker(context, ref),
                 const SizedBox(height: 32),
                 _buildImagePreview(foodState.selectedImage),
                 const SizedBox(height: 32),
@@ -116,7 +176,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  // 💧 🚀 NAYA FUNCTION: Water Tracker ka Khubsurat UI
+  // 💧 Water Tracker
   Widget _buildWaterTracker(BuildContext context, WidgetRef ref) {
     final waterState = ref.watch(waterProvider);
     final waterNotifier = ref.read(waterProvider.notifier);
@@ -124,9 +184,9 @@ class HomeScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFEBF8FF), // Halka Neela (Light Blue) background
+        color: const Color(0xFFEBF8FF),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: const Color(0xFF90CDF4), width: 1.5), // Neeli border
+        border: Border.all(color: const Color(0xFF90CDF4), width: 1.5),
         boxShadow: [BoxShadow(color: const Color(0xFF4299E1).withOpacity(0.1), blurRadius: 15, offset: const Offset(0, 5))],
       ),
       child: Column(
@@ -148,7 +208,6 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Glasses Row (Icons)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(waterState.dailyGoal, (index) {
@@ -166,7 +225,6 @@ class HomeScreen extends ConsumerWidget {
             }),
           ),
           const SizedBox(height: 16),
-          // Action Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
